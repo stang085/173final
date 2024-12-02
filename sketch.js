@@ -1,219 +1,204 @@
-let x, y;
-let speed = 5;
-let frames = [];
-let totalFrames = 6;
+/*
+ * 👋 Hello! This is an ml5.js example made and shared with ❤️.
+ * Learn more about the ml5.js project: https://ml5js.org/
+ * ml5.js license and Code of Conduct: https://github.com/ml5js/ml5-next-gen/blob/main/LICENSE.md
+ *
+ * This example demonstrates hand tracking on live video through ml5.handPose.
+ */
 
-let direction = 1;
-let background_frame;
-let background_x = 0;
-let background_y = 0;
+let handPose;
+let video;
+let hands = [];
+let resize = 5
+let frame0;
+let frame1;
+let frame2;
+let radius = 60;
+let pixelInfo = [] //contains information about each pixel
+let changedPixels = []
+let d
+let p = 0
+let frameThres = 30
+let frameThres2 = 20
 
-let frameWidth = 250;
-let frameHeight = 250;
-let meatballs = [];
-let numMeatballs = 10;
-
-let WORLD_WIDTH = 1200;
-let WORLD_HEIGHT = 600;
-
-let gameState = "title"; // The initial state is the title screen
-let startButton;
-let resetButton;
-let loadingTime = 4000; // Duration of loading screen in milliseconds (5s)
-let playingTime = 20000; //20 seconds of playing time
-let startTime;
-let endTime;
 
 function preload() {
-  for (let i = 0; i < totalFrames; i++) {
-    frames.push(loadImage(`frames/pixil-frame-${i}.png`));
-  }
-  background_frame = loadImage("background2.png");
-  key_image = loadImage("key.png");
-  meatball_image = loadImage("meatball.png");
-  deadLION = loadImage("deadLION.png");
+  // Load the handPose model
+  handPose = ml5.handPose();
+  //import images
+  frame0 = loadImage('images/pixil-frame-0.png');
+  frame1 = loadImage('images/pixil-frame-1.png');
+  frame2 = loadImage('images/pixil-frame-2.png');
 }
 
 function setup() {
-  createCanvas(600, 600);
-
-  x = width / 2;
-  y = height / 2;
-  textFont("Courier New");
-
-  lion = new LION(50, y, 0.5, frames);
-  bg = new Background(0, 0, background_frame);
-
-  //create meatballs
-  for (let i = 0; i < numMeatballs; i++) {
-    let worldX = random(250, WORLD_WIDTH - 100);
-    meatballs[i] = new Meatball(
-      worldX,
-      worldX,
-      random(400, height - 50),
-      30,
-      meatball_image
-    );
+  createCanvas(400,600);
+  pixelDensity(1)
+  d = pixelDensity();
+  // Create the webcam video and hide it
+  video = createCapture(VIDEO);
+  video.size(400, 600);
+  video.hide();
+  // start detecting hands from the webcam video
+  handPose.detectStart(video, gotHands);
+  
+  //import images
+  frame0 = loadImage('images/pixil-frame-0.png');
+  frame1 = loadImage('images/pixil-frame-1.png');
+  frame2 = loadImage('images/pixil-frame-2.png');
+  
+  
+  //allow you to access the pixil data through frame0.pixels
+  frame0.loadPixels();
+  frame1.loadPixels();
+  frame2.loadPixels();
+  //image(frame0,0,0, frame0.width, frame0.height)
+  
+  //init pixel information
+  for (let i = 0; i < width; i++) {
+    pixelInfo[i] = []; // Create a new row
+    for (let j = 0; j < height; j++) {
+      pixelInfo[i][j] = { x: i, y: j, time: 0 }; // Assign pixel info
+    }
   }
-  startButton = createButton("Start Game");
-  startButton.position(width / 2 - 60, height / 2 + 50);
-  startButton.size(120, 50);
-  startButton.mousePressed(startGame);
-  startButton.style("font-family", "Courier New");
-  startButton.style("background-color", "#fbda0b");
-  startButton.style("border-width", "4px");
-  // Attach the startGame function to the button
+  //console.log(frame1.pixels)
 
-  resetButton = createButton("Reset");
-  resetButton.position(width / 2 - 60, height / 2 + 85);
-  resetButton.size(120, 50);
-  resetButton.mousePressed(restartGame);
-  resetButton.style("font-family", "Courier New");
-  resetButton.style("background-color", "#fbda0b");
-  resetButton.style("border-width", "4px");
-  resetButton.hide();
-
-  game = new Game(lion, bg, meatballs, height, width);
+  
 }
 
 function draw() {
-  if (gameState === "title") {
-    drawTitleScreen(); // Display the title screen
-  } else if (gameState == "loading") {
-    drawLoadingScreen();
-    if (millis() - startTime >= loadingTime) {
-      gameState = "loading2";
+  // Draw the webcam video
+  //image(video, 0, 0, width, height);
+  //render the base frame
+  pixelDensity(1)
+  image(frame0, 0, 0, frame1.width, frame1.height)
+  loadPixels()
+  frame0.loadPixels();
+  frame1.loadPixels();
+  frame2.loadPixels();
+  
+  //check the mouse position 
+  
+  //if the pixel is within the radius of the mouse position
+  //increase the time
+  //if the time is above a certain number, change the frame
+  
+  
+  for (let h = 0; h < hands.length; h ++) {
+  
+    let mX = width - int(hands[h].wrist.x)
+    let mY = int(hands[h].wrist.y)
+
+    startX = max(mX - radius, 0)
+    endX = min(width, mX + radius)
+    startY = max(mY - radius, 0)
+    endY = min(height, mY + radius)
+
+
+    //iterate through the pixels in the radius
+    for (x = startX; x < endX; x++) {
+      for (y = startY; y < endY; y++) {
+        //(x - h)^2 + (y - k)^2 < r^2 -> see pixel is inside the radius
+        left = (x - mX) * (x - mX) + (y - mY) * (y - mY)
+        if (left < radius * radius) { //inside the radius
+          //increase the time for the pixel
+          if (x >= 0 && x < width && y >= 0 && y < height) {
+            let p = pixelInfo[x][y];
+
+            if (p) { // Ensure p is valid
+              if (p.time == 0) {
+                changedPixels.push(p);
+              }
+              if (p.time < frameThres) {
+                p.time = max(p.time + (1 - (left / radius / radius)), 0.75);
+              } else if (p.time >= frameThres) {
+                p.time = max(p.time + (1 - (left / radius / radius)), 0.8);
+              }
+            }
+          }
+        }
+      }
     }
-  } else if (gameState == "loading2") {
-    drawLoadingScreen2();
-    if (millis() - startTime >= loadingTime * 2) {
-      gameState = "main";
-      //restart the timer
-      startTime = millis();
-    }
-  } else if (gameState == "main") {
-    drawGame();
-    if ((playingTime - millis() + startTime) / 1000 <= 0) {
-      gameState = "end";
-    }
-  } else if (gameState == "end") {
-    drawEnd();
   }
-}
+  
+  
+  //go through changedPixels
+  for (i = 0; i < changedPixels.length; i ++) {
+    p = changedPixels[i]
+    if (p.time < frameThres) { //differenciate between frame0 and frame1
 
-function startGame() {
-  gameState = "loading"; // Change the state to "game"
-  startButton.hide(); 
-  startTime = millis();
-}
+      let index = 4 * (p.y * frame1.width + p.x);
+      let ratio = p.time / frameThres
 
-function restartGame() {
-  gameState = "title";
-  resetButton.hide();
-  startTime = millis();
-  setup();
-}
+      let newR = (frame1.pixels[index] * ratio) + (pixels[index] * (1 - ratio))
+      let newG = (frame1.pixels[index + 1] * ratio) + (pixels[index + 1] * (1 - ratio))
+      let newB = (frame1.pixels[index + 2] * ratio) + (pixels[index + 2] * (1 - ratio))
 
-function drawTitleScreen() {
-  background(0, 87, 183); // Title screen background color
-  textAlign(CENTER);
-  textSize(50);
-  fill(255);
-  text("Lion in IKEA!", width / 2, height / 3 + 30);
-  // Display the game title
-  textSize(20);
-  text("Click the button to start:", width / 2, height / 2 + 30); 
-}
+      pixels[index] = newR
+      pixels[index + 1] = newG
+      pixels[index + 2] = newB
 
-function drawLoadingScreen() {
-  background(0);
-  fill(255);
-  textAlign(CENTER);
-  textSize(32);
-  text("A lion was \nset loose in IKEA!", width / 2, height / 2 - 20);
-}
-
-function drawLoadingScreen2() {
-  background(0);
-  fill(255);
-  textAlign(CENTER);
-  textSize(32);
-  text(
-    "Your Mission:\n\nEat all the IKEA meatballs\nbefore you get captured!",
-    width / 2,
-    height / 2 - 45
-  ); // Display story screen
-}
-
-function drawGame() {
-  lion.moving = false;
-  lion.update();
-  checkKeys();
-  game.update();
-  game.render();
-  elapsedTime = (playingTime - millis() + startTime) / 1000;
-  displayTimeBox(elapsedTime);
-}
-
-function displayTimeBox(time) {
-  // Draw the box
-  strokeWeight(4);
-  fill(0, 87, 183); // Black box
-  rect(15, 15, 150, 40); // Rectangle in top-left corner
-
-  // Display the time inside the box
-  fill(255); // White text
-  textSize(20);
-  textAlign(LEFT, CENTER);
-  text("Time: " + nf(time, 0, 2), 25, 35);
-}
-
-function drawEnd() {
-  background(0, 87, 183); // Title screen background color
-  textAlign(CENTER);
-  textSize(50);
-  fill(255);
-  text("Time's up!", width / 2, height / 3 + 50);
-  // Display the game title
-  textSize(20);
-  text("Your Score: " + game.meatballCounter, 
-       width / 2, height / 2 + 30);
-  textSize(18);
-  text("Click the button to reset:", 
-       width / 2, height / 2 + 60);
-  let scale = 0.45;
-  image(
-    deadLION,
-    width / 2 - (deadLION.width * scale) / 2,
-    60,
-    deadLION.width * scale,
-    deadLION.height * scale
-  );
-  resetButton.show();
-}
-
-function checkKeys() {
-  if (keyIsDown(UP_ARROW)) {
-    const dir = createVector(0, -1);
-    lion.move(dir);
-    return;
-  } else if (keyIsDown(DOWN_ARROW)) {
-    const dir = createVector(0, 1);
-    lion.move(dir);
-    return;
-  } else if (keyIsDown(LEFT_ARROW)) {
-    const dir = createVector(-1, 0);
-    lion.move(dir);
-    if (lion.atEdge()) {
-      bg.scrollBackground(lion);
     }
-    return;
-  } else if (keyIsDown(RIGHT_ARROW)) {
-    const dir = createVector(1, 0);
-    lion.move(dir);
-    if (lion.atEdge()) {
-      bg.scrollBackground(lion);
+    if (p.time >= frameThres) {
+      let index = 4 * (p.y * frame2.width + p.x);
+      let ratio = min((p.time - frameThres) / frameThres2, 1)
+
+      let newR = (frame2.pixels[index] * ratio) + (frame1.pixels[index] * (1 - ratio))
+      let newG = (frame2.pixels[index + 1] * ratio) + (frame1.pixels[index + 1] * (1 - ratio))
+      let newB = (frame2.pixels[index + 2] * ratio) + (frame1.pixels[index + 2] * (1 - ratio))
+
+      pixels[index] = newR
+      pixels[index + 1] = newG
+      pixels[index + 2] = newB
     }
-    return;
+    //if the pixel is not within the radius
+    //decrease the time
+    for (let h = 0; h < hands.length; h ++) {
+  
+      let mX = width - int(hands[h].wrist.x)
+      let mY = int(hands[h].wrist.y)
+      left = (p.x - mX) * (p.x - mX) + (p.y - mY) * (p.y - mY)
+      //console.log(left)
+      if (left > radius * radius) { //not in the radius
+        p.time = max(p.time - 0.1,0)
+        if (p.time == 0) {
+          changedPixels.splice(i,1)
+        }
+      }
+    }
   }
+  
+  
+  //if p.time is above a certain threshold then change the frame
+  //to calculate the color of the pixel, use the ratio of the two frames
+  
+  //console.log(changedPixels.length)
+  
+  
+  
+
+  //Draw all the tracked hand points
+  // for (let i = 0; i < hands.length; i++) {
+  //   let hand = hands[i];
+  //   console.log(hands[i])
+  //   for (let j = 0; j < hand.keypoints.length; j++) {
+  //     let keypoint = hand.keypoints[j];
+  //     fill(0, 255, 0);
+  //     noStroke();
+  //     circle(keypoint.x, keypoint.y, 10);
+  //   }
+  // }
+  
+  
+  updatePixels()
+}
+
+function getPixel(x,y) {
+  return y * width + x;
+}
+
+// Callback function for when handPose outputs data
+function gotHands(results) {
+  // save the output to the hands variable
+  hands = results;
 }
