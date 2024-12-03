@@ -101,8 +101,8 @@ function drawGame() {
   for (let h = 0; h < iter; h ++) {
   
     if (gameMode == "video") {
-      mX = width - int(hands[h].wrist.x)
-      mY = int(hands[h].wrist.y)
+      mX = width - int(hands[h].middle_finger_mcp.x)
+      mY = int(hands[h].middle_finger_mcp.y)
     }
     if (gameMode == "mouse") {
       mX = mouseX
@@ -187,21 +187,6 @@ function drawGame() {
       }
     }
   }
-
-  
-  //console.log(changedPixels.length)
-  
-  //Draw all the tracked hand points
-  // for (let i = 0; i < hands.length; i++) {
-  //   let hand = hands[i];
-  //   console.log(hands[i])
-  //   for (let j = 0; j < hand.keypoints.length; j++) {
-  //     let keypoint = hand.keypoints[j];
-  //     fill(0, 255, 0);
-  //     noStroke();
-  //     circle(keypoint.x, keypoint.y, 10);
-  //   }
-  // }
   
   
   updatePixels()
@@ -234,6 +219,7 @@ function drawTitleScreen() {
     video.hide();
     // start detecting hands from the webcam video
     handPose.detectStart(video, gotHands);
+    radius = 75
 
   
   }
