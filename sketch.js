@@ -10,6 +10,7 @@ let resize = 5
 let frame0;
 let frame1;
 let frame2;
+let title;
 let music;
 
 let radius = 60;
@@ -23,34 +24,33 @@ let mX
 let mY
 
 let maxTime = 100
+let gameState = 'title'
+let gameMode
+
+let mButton
+let vButton
+
 
 
 function preload() {
   // Load the handPose model
-  //handPose = ml5.handPose();
+  handPose = ml5.handPose();
   //import images
   frame0 = loadImage('images/pixil-frame-0.png');
   frame1 = loadImage('images/pixil-frame-1.png');
   frame2 = loadImage('images/pixil-frame-2.png');
-  //music = loadSound('173final_music.wav')
+  title = loadImage('images/title.png');
 }
 
 function setup() {
   createCanvas(400,600);
   pixelDensity(1)
   d = pixelDensity();
-  // Create the webcam video and hide it
-  //video = createCapture(VIDEO);
-  //video.size(400, 600);
-  //video.hide();
-  // start detecting hands from the webcam video
-  //handPose.detectStart(video, gotHands);
-  //music.loop()
   
-  //import images
-  frame0 = loadImage('images/pixil-frame-0.png');
-  frame1 = loadImage('images/pixil-frame-1.png');
-  frame2 = loadImage('images/pixil-frame-2.png');
+
+  
+
+  
   
   
   //allow you to access the pixil data through frame0.pixels
@@ -72,9 +72,19 @@ function setup() {
 }
 
 function draw() {
-  // Draw the webcam video
-  //image(video, 0, 0, width, height);
-  //render the base frame
+  if (gameState == 'title') {
+    drawTitleScreen(); // Display the title screen
+  }
+  else {
+    drawGame()
+  }
+  console.log(gameMode)
+
+
+}
+
+function drawGame() {
+    //render the base frame
   pixelDensity(1)
   image(frame0, 0, 0, frame1.width, frame1.height)
   loadPixels()
@@ -87,14 +97,20 @@ function draw() {
   //if the pixel is within the radius of the mouse position
   //increase the time
   //if the time is above a certain number, change the frame
+  let iter = 1
+  if (gameMode == "video") {
+    iter = hands.length
+  }
+  for (let h = 0; h < iter; h ++) {
   
-  
-  for (let h = 0; h < 1; h ++) {
-  
-    //mX = width - int(hands[h].wrist.x)
-    //mY = int(hands[h].wrist.y)
-    mX = mouseX
-    mY = mouseY
+    if (gameMode == "video") {
+      mX = width - int(hands[h].wrist.x)
+      mY = int(hands[h].wrist.y)
+    }
+    if (gameMode == "mouse") {
+      mX = mouseX
+      mY = mouseY
+    }
 
     startX = max(mX - radius, 0)
     endX = min(width, mX + radius)
@@ -176,7 +192,6 @@ function draw() {
   
   //console.log(changedPixels.length)
   
-
   //Draw all the tracked hand points
   // for (let i = 0; i < hands.length; i++) {
   //   let hand = hands[i];
@@ -191,7 +206,41 @@ function draw() {
   
   
   updatePixels()
+
 }
+
+function mouseMode() {
+}
+
+function drawTitleScreen() {
+  image(title,0,0)
+  mX = mouseX 
+  mY = mouseY
+  ///mButton.size(167-96, 336-307);
+  let checkX = mX > 96 && mX < 167
+  let checkY = mY > 307 && mY < 336
+  if (checkX && checkY && mouseIsPressed ) {
+    gameMode = "mouse"
+    gameState = "play"
+  }
+  //223,307 && 311,336
+  checkX = mX > 223 && mX < 311
+  checkY = mY > 311 && mY < 336
+  if (checkX && checkY && mouseIsPressed ) {
+    gameMode = "video"
+    gameState = "play"
+    // Create the webcam video and hide it
+    video = createCapture(VIDEO);
+    video.size(400, 600);
+    video.hide();
+    // start detecting hands from the webcam video
+    handPose.detectStart(video, gotHands);
+
+  
+  }
+  
+}
+
 
 function getPixel(x,y) {
   return y * width + x;
