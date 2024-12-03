@@ -30,6 +30,8 @@ let gameMode
 let mButton
 let vButton
 
+let changeRadius = 3
+
 
 
 function preload() {
@@ -47,10 +49,6 @@ function setup() {
   pixelDensity(1)
   d = pixelDensity();
   
-
-  
-
-  
   
   
   //allow you to access the pixil data through frame0.pixels
@@ -66,7 +64,6 @@ function setup() {
       pixelInfo[i][j] = { x: i, y: j, time: 0 }; // Assign pixel info
     }
   }
-  //console.log(frame1.pixels)
 
   
 }
@@ -78,7 +75,6 @@ function draw() {
   else {
     drawGame()
   }
-  console.log(gameMode)
 
 
 }
@@ -91,6 +87,7 @@ function drawGame() {
   frame0.loadPixels();
   frame1.loadPixels();
   frame2.loadPixels();
+
   
   //check the mouse position 
   
@@ -112,7 +109,7 @@ function drawGame() {
       mY = mouseY
     }
 
-    startX = max(mX - radius, 0)
+    startX = int(max(mX - radius, 0))
     endX = min(width, mX + radius)
     startY = max(mY - radius, 0)
     endY = min(height, mY + radius)
@@ -126,6 +123,8 @@ function drawGame() {
         if (left < radius * radius) { //inside the radius
           //increase the time for the pixel
           if (x >= 0 && x < width && y >= 0 && y < height) {
+            //console.log(x,y)
+            //console.log(pixelInfo)
             let p = pixelInfo[x][y];
 
             if (p) { // Ensure p is valid
@@ -239,6 +238,17 @@ function drawTitleScreen() {
   
   }
   
+}
+
+function mouseDragged() {
+  if (gameMode == "mouse") {
+    if (movedX > 0) {
+      radius += changeRadius
+    }
+    if (movedX < 0) {
+      radius -= changeRadius
+    }
+  }
 }
 
 
