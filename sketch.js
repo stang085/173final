@@ -1,9 +1,6 @@
 /*
- * 👋 Hello! This is an ml5.js example made and shared with ❤️.
- * Learn more about the ml5.js project: https://ml5js.org/
+ * made using ml5
  * ml5.js license and Code of Conduct: https://github.com/ml5js/ml5-next-gen/blob/main/LICENSE.md
- *
- * This example demonstrates hand tracking on live video through ml5.handPose.
  */
 
 let handPose;
@@ -13,6 +10,8 @@ let resize = 5
 let frame0;
 let frame1;
 let frame2;
+let music;
+
 let radius = 60;
 let pixelInfo = [] //contains information about each pixel
 let changedPixels = []
@@ -20,6 +19,10 @@ let d
 let p = 0
 let frameThres = 30
 let frameThres2 = 20
+let mX
+let mY
+
+let maxTime = 100
 
 
 function preload() {
@@ -29,6 +32,7 @@ function preload() {
   frame0 = loadImage('images/pixil-frame-0.png');
   frame1 = loadImage('images/pixil-frame-1.png');
   frame2 = loadImage('images/pixil-frame-2.png');
+  music = loadSound('173final_music.wav')
 }
 
 function setup() {
@@ -36,11 +40,12 @@ function setup() {
   pixelDensity(1)
   d = pixelDensity();
   // Create the webcam video and hide it
-  video = createCapture(VIDEO);
-  video.size(400, 600);
-  video.hide();
+  //video = createCapture(VIDEO);
+  //video.size(400, 600);
+  //video.hide();
   // start detecting hands from the webcam video
-  handPose.detectStart(video, gotHands);
+  //handPose.detectStart(video, gotHands);
+  music.loop()
   
   //import images
   frame0 = loadImage('images/pixil-frame-0.png');
@@ -84,10 +89,12 @@ function draw() {
   //if the time is above a certain number, change the frame
   
   
-  for (let h = 0; h < hands.length; h ++) {
+  for (let h = 0; h < 1; h ++) {
   
-    let mX = width - int(hands[h].wrist.x)
-    let mY = int(hands[h].wrist.y)
+    //mX = width - int(hands[h].wrist.x)
+    //mY = int(hands[h].wrist.y)
+    mX = mouseX
+    mY = mouseY
 
     startX = max(mX - radius, 0)
     endX = min(width, mX + radius)
@@ -111,8 +118,10 @@ function draw() {
               }
               if (p.time < frameThres) {
                 p.time = max(p.time + (1 - (left / radius / radius)), 0.75);
+                p.time = min(p.time, maxTime)
               } else if (p.time >= frameThres) {
                 p.time = max(p.time + (1 - (left / radius / radius)), 0.8);
+                p.time = min(p.time, maxTime)
               }
             }
           }
@@ -120,10 +129,10 @@ function draw() {
       }
     }
   }
-  
+  let pixelsToPush = []
   
   //go through changedPixels
-  for (i = 0; i < changedPixels.length; i ++) {
+  for (i = changedPixels.length-1; i >= 0; i--) {
     p = changedPixels[i]
     if (p.time < frameThres) { //differenciate between frame0 and frame1
 
@@ -153,28 +162,19 @@ function draw() {
     }
     //if the pixel is not within the radius
     //decrease the time
-    for (let h = 0; h < hands.length; h ++) {
-  
-      let mX = width - int(hands[h].wrist.x)
-      let mY = int(hands[h].wrist.y)
-      left = (p.x - mX) * (p.x - mX) + (p.y - mY) * (p.y - mY)
-      //console.log(left)
-      if (left > radius * radius) { //not in the radius
-        p.time = max(p.time - 0.1,0)
-        if (p.time == 0) {
-          changedPixels.splice(i,1)
-        }
+    
+    left = (p.x - mX) * (p.x - mX) + (p.y - mY) * (p.y - mY)
+    //console.log(left)
+    if (left > radius * radius) { //not in the radius
+      p.time = max(p.time - 0.1,0)
+      if (p.time == 0) {
+        changedPixels.splice(i,1)
       }
     }
   }
-  
-  
-  //if p.time is above a certain threshold then change the frame
-  //to calculate the color of the pixel, use the ratio of the two frames
+
   
   //console.log(changedPixels.length)
-  
-  
   
 
   //Draw all the tracked hand points
