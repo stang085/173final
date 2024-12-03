@@ -27,12 +27,12 @@ let maxTime = 100
 
 function preload() {
   // Load the handPose model
-  handPose = ml5.handPose();
+  //handPose = ml5.handPose();
   //import images
   frame0 = loadImage('images/pixil-frame-0.png');
   frame1 = loadImage('images/pixil-frame-1.png');
   frame2 = loadImage('images/pixil-frame-2.png');
-  music = loadSound('173final_music.wav')
+  //music = loadSound('173final_music.wav')
 }
 
 function setup() {
@@ -45,7 +45,7 @@ function setup() {
   //video.hide();
   // start detecting hands from the webcam video
   //handPose.detectStart(video, gotHands);
-  music.loop()
+  //music.loop()
   
   //import images
   frame0 = loadImage('images/pixil-frame-0.png');
