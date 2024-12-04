@@ -11,6 +11,7 @@ let frame0;
 let frame1;
 let frame2;
 let title;
+let backButton;
 let music;
 
 let radius = 60;
@@ -41,6 +42,7 @@ function preload() {
   frame0 = loadImage('images/pixil-frame-0.png');
   frame1 = loadImage('images/pixil-frame-1.png');
   frame2 = loadImage('images/pixil-frame-2.png');
+  backButton = loadImage('images/backButton.png');
   title = loadImage('images/title.png');
 }
 
@@ -190,7 +192,9 @@ function drawGame() {
   
   
   updatePixels()
-
+  
+  image(backButton, 10, 560)
+  checkBackButton()
 }
 
 function mouseMode() {
@@ -220,10 +224,27 @@ function drawTitleScreen() {
     // start detecting hands from the webcam video
     handPose.detectStart(video, gotHands);
     radius = 75
+    frameThres = 20
 
   
   }
   
+}
+
+function checkBackButton() {
+  mX = mouseX 
+  mY = mouseY
+  ///mButton.size(167-96, 336-307);
+  let checkX = mX > 10 && mX < 80
+  let checkY = mY > 560 && mY < 590
+  if (checkX && checkY && mouseIsPressed) { 
+    //if back button is pressed, reset everything
+    gameState = 'title'
+    gameMode = ''
+    setup()
+    changedPixels = []
+    
+  }
 }
 
 function mouseDragged() {
