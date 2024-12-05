@@ -32,6 +32,7 @@ let mButton
 let vButton
 
 let changeRadius = 3
+let button
 
 
 
@@ -47,10 +48,21 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(400,600);
+  let canvas = createCanvas(400,600);
+  
   pixelDensity(1)
   d = pixelDensity();
   
+  button = createButton('Toggle Fullscreen');
+  button.position((windowWidth-150) / 2, (windowHeight + height) / 2 + 20); 
+
+  button.mousePressed(toggleFullscreen); // Attach the click handler
+  button.style("font-family", "Courier New");
+  button.style("background-color", "#ECECEC");
+  button.style("border-width", "2px");
+  button.style("border-color", "#D1D1D1")
+
+
   
   
   //allow you to access the pixil data through frame0.pixels
@@ -258,9 +270,23 @@ function mouseDragged() {
   }
 }
 
+function toggleFullscreen() {
+  let fs = fullscreen(); // Check if fullscreen is active
+  fullscreen(!fs); // Toggle fullscreen mode
+}
+
+function windowResized() {
+  resizeCanvas(400, 600);
+  button.position((windowWidth - 150) / 2, (windowHeight + height) / 2 + 20); // Re-center the button
+  button.style("background-color", "#A3A3A3");
+  button.style("border-width", "2px");
+  button.style("border-color", "#747474")
+}
+
 
 function getPixel(x,y) {
   return y * width + x;
+  
 }
 
 // Callback function for when handPose outputs data
